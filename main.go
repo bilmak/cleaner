@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 )
 
@@ -16,13 +18,29 @@ func main() {
 	}
 
 	for _, f := range files {
+		// isDir - czy to folder
 		if f.IsDir() {
 			continue
 		}
+
 		type_ := getType(f.Name())
 		folder := getFolder(type_)
+		pathForSearching := path + "/" + folder
 
-		fmt.Println(folder)
+		if _, err := os.Stat(pathForSearching); errors.Is(err, os.ErrNotExist) {
+			err := os.Mkdir(pathForSearching, os.ModePerm)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+
+		oldLocation := path + "/" + f.Name()
+		newLocation := path + "/" + folder + "/" + f.Name()
+		err := os.Rename(oldLocation, newLocation)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(pathForSearching)
 	}
 
 }
